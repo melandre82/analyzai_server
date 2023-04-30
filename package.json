@@ -24,5 +24,9 @@
     "extends": [
       "@lnu/eslint-config"
     ]
+  },
+  "dependencies": {
+    "@pinecone-database/pinecone": "^0.0.14",
+    "pdf-parse": "^1.1.1"
   }
 }
