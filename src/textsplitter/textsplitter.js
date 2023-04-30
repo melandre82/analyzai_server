@@ -3,14 +3,14 @@ import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter'
 import { Document } from 'langchain/document'
 
 export class TextSplitter {
-//   textSplitter
+  //   textSplitter
 
-//   constructor() {
-//     this.textSplitter = new RecursiveCharacterTextSplitter({
-//       chunkSize: 1000,
-//       chunkOverlap: 200,
-//     })
-//   }
+  //   constructor() {
+  //     this.textSplitter = new RecursiveCharacterTextSplitter({
+  //       chunkSize: 1000,
+  //       chunkOverlap: 200,
+  //     })
+  //   }
 
   //   async split(text) {
   //     // return await this.textSplitter.splitDocuments([
@@ -22,7 +22,7 @@ export class TextSplitter {
   async splitText(text, chunkSize) {
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize,
-      chunkOverlap: 1
+      chunkOverlap: 1,
     })
 
     return await splitter.createDocuments([text])

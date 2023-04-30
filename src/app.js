@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 import { createRequire } from 'module'
 import { PdfLoader } from './dataloaders/pdfloader.js'
 import { TextSplitter } from './textsplitter/textsplitter.js'
-import { VectorConverter } from './vectorconverter/vectorconverter.js'
+import { VectorConverter } from './database-interaction/vectorconverter.js'
 import path from 'path'
 
 createRequire(import.meta.url)
@@ -36,29 +36,29 @@ try {
   const filePath = 'src/utbildningsplan-NGWEC-7.pdf'
   const absolutePath = path.resolve(filePath)
 
-  console.log(await pdfLoader.load(`${absolutePath}`))
+    const pdfText = await pdfLoader.load(`${absolutePath}`)
+
+    const textString = JSON.stringify(pdfText)
+
+//   console.log(await pdfLoader.load(`${absolutePath}`))
 
   const textSplitter = new TextSplitter()
 
-  const text = `Hi.\n\nI'm Harrison.\n\nHow? Are? You?\nOkay then f f f f.
-  This is a weird text to write, but gotta test the splittingggg some how.\n\n
-  Bye!\n\n-H.`
-
-  console.log(await textSplitter.splitText(text, 20))
-
   const documents = []
 
-  const doc = await textSplitter.splitText(text, 20)
+  const doc = await textSplitter.splitText(textString, 1000)
 
   documents.push(doc)
 
   const vectorConverter = new VectorConverter()
 
   for (const document of documents) {
-    if (document !== null) {
-      await vectorConverter.convert(document)
+    if (document !== null && document !== undefined) {
+      await vectorConverter.index(document)
     }
   }
+
+  vectorConverter.query('vad handlar denna pdf om?')
 } catch (error) {
   console.log(error)
 }
