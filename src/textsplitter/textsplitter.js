@@ -22,7 +22,7 @@ export class TextSplitter {
   async splitText(text, chunkSize) {
     const splitter = new RecursiveCharacterTextSplitter({
       chunkSize,
-      chunkOverlap: 1,
+      chunkOverlap: 200,
     })
 
     return await splitter.createDocuments([text])

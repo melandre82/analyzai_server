@@ -6,6 +6,7 @@ import { PdfLoader } from './dataloaders/pdfloader.js'
 import { TextSplitter } from './textsplitter/textsplitter.js'
 import { VectorConverter } from './database-interaction/vectorconverter.js'
 import path from 'path'
+import { connectDB } from '../config/mongoose.js'
 
 createRequire(import.meta.url)
 
@@ -15,6 +16,7 @@ async function loadEnvironmentVariables() {
 
 try {
   await loadEnvironmentVariables()
+  await connectDB()
 
   // dotenv.config()
 
@@ -33,32 +35,34 @@ try {
   // }
 
   const pdfLoader = new PdfLoader()
-  const filePath = 'src/utbildningsplan-NGWEC-7.pdf'
+  const filePath = 'src/porsche.pdf'
   const absolutePath = path.resolve(filePath)
 
-    const pdfText = await pdfLoader.load(`${absolutePath}`)
+  const pdfText = await pdfLoader.load(`${absolutePath}`)
 
-    const textString = JSON.stringify(pdfText)
+  const textString = JSON.stringify(pdfText)
 
-//   console.log(await pdfLoader.load(`${absolutePath}`))
+  //   console.log(await pdfLoader.load(`${absolutePath}`))
 
   const textSplitter = new TextSplitter()
 
-  const documents = []
+//   const documents = []
 
   const doc = await textSplitter.splitText(textString, 1000)
 
-  documents.push(doc)
+//   documents.push(doc)
 
   const vectorConverter = new VectorConverter()
 
-  for (const document of documents) {
-    if (document !== null && document !== undefined) {
-      await vectorConverter.index(document)
-    }
-  }
+//   for (const document of documents) {
+//     if (document !== null && document !== undefined) {
+//       await vectorConverter.index(document)
+//     }
+//   }
 
-  vectorConverter.query('vad handlar denna pdf om?')
+  await vectorConverter.index(doc)
+
+  vectorConverter.query('give a summary of the history of porsche')
 } catch (error) {
   console.log(error)
 }
