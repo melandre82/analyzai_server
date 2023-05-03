@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import { connectDB } from './config/mongoose.js'
 import logger from 'morgan'
 import { router } from './routes/router.js'
+import cors from 'cors'
 
 try {
   dotenv.config()
@@ -11,7 +12,18 @@ try {
 
   const app = express()
 
+  const corsOptions = {
+    origin: `${process.env.CLIENT_URL}`,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  }
+
+  app.use(cors(corsOptions))
+
   app.use(logger('dev'))
+
+  app.use(cors())
 
   app.use(express.json())
 
