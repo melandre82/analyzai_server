@@ -6,7 +6,7 @@ import { PdfLoader } from './dataloaders/pdfloader.js'
 import { TextSplitter } from './textsplitter/textsplitter.js'
 import { VectorConverter } from './database-interaction/vectorconverter.js'
 import path from 'path'
-import { connectDB } from '../config/mongoose.js'
+import { connectDB } from './config/mongoose.js'
 
 createRequire(import.meta.url)
 
