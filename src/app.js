@@ -2,9 +2,9 @@
 import { OpenAI } from 'langchain/llms/openai'
 import dotenv from 'dotenv'
 import { createRequire } from 'module'
-import { PdfLoader } from './dataloaders/pdfloader.js'
-import { TextSplitter } from './textsplitter/textsplitter.js'
-import { VectorConverter } from './database-interaction/vectorconverter.js'
+import { PdfLoader } from './functions/dataloaders/pdfloader.js'
+import { TextSplitter } from './functions/textsplitter/textsplitter.js'
+import { VectorConverter } from './functions/database-interaction/vectorconverter.js'
 import path from 'path'
 import { connectDB } from './config/mongoose.js'
 

@@ -6,7 +6,7 @@ import { PineconeStore } from 'langchain/vectorstores/pinecone'
 import { VectorDBQAChain } from 'langchain/chains'
 import { OpenAI } from 'langchain/llms/openai'
 import CryptoJS from 'crypto-js'
-import { DocumentIdentifier } from '../../models/document-id.js'
+import { DocumentIdentifier } from '../../../models/document-id.js'
 
 dotenv.config()
 
