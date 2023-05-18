@@ -31,33 +31,13 @@ export class VectorConverter {
   async index(docs) {
     await this.#initialized
 
-    const uniqueDocs = docs
 
-    // const uniqueDocs = []
+    for (const doc of docs) {
+      doc.pageContent.replace((/\n/g, ' '))
+      console.log(doc.metadata)
+    }
 
-    // for (const doc of docs) {
-    //   const contentHash = CryptoJS.SHA256(JSON.stringify(doc)).toString(
-    //     CryptoJS.enc.Hex
-    //   )
-    //   try {
-    //     const existingDoc = await DocumentIdentifier.findOne({ contentHash })
-    //     if (!existingDoc) {
-    //       // If the document is not found in MongoDB, it's considered unique
-    //       uniqueDocs.push(doc)
-
-    //       // Create a new DocumentModel instance and save it in MongoDB
-    //       const newDocument = new DocumentIdentifier({
-    //         hash: contentHash,
-    //       })
-
-    //       await newDocument.save()
-    //     }
-    //   } catch (error) {
-    //     console.log('Error while checking for duplicates:', error)
-    //   }
-    // }
-
-    await PineconeStore.fromDocuments(uniqueDocs, new OpenAIEmbeddings(), {
+    await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
       pineconeIndex: this.#pineconeIndex,
     })
     // await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {

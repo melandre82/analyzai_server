@@ -8,9 +8,10 @@
 //   uploadBytesResumable,
 // } from 'firebase/storage'
 // import { firebaseConfig } from '../config/firebase.js'
-import { TextSplitter } from '../functions/textsplitter/textsplitter.js'
+import { TextSplitter } from '../functions/text-manipulation/textsplitter.js'
 import { VectorConverter } from '../functions/database-interaction/vectorconverter.js'
-import { PdfLoader } from '../functions/dataloaders/pdfloader.js'
+import { parsePdf } from '../functions/dataloaders/pdfParse.js'
+import { cleanText } from '../functions/text-manipulation/cleanText.js'
 import bucket from '../config/firebaseAdmin.cjs'
 
 // initializeApp(firebaseConfig)
@@ -20,6 +21,8 @@ import bucket from '../config/firebaseAdmin.cjs'
 const textSplitter = new TextSplitter()
 
 const vectorConverter = new VectorConverter()
+
+// const pdfLoader = new PdfLoader()
 
 export class FileController {
   async receiveFile(req, res, next) {
@@ -53,16 +56,23 @@ export class FileController {
         })
 
         // Send the response
-        res.send({
-          message: 'file uploaded to firebase storage',
-          name: file.originalname,
-          type: file.mimetype,
-          downloadURL: downloadURL[0],
-        })
+        // res.send({
+        //   message: 'file uploaded to firebase storage',
+        //   name: file.originalname,
+        //   type: file.mimetype,
+        //   downloadURL: downloadURL[0],
+        // })
       })
 
       // Upload the file
       writeStream.end(file.buffer)
+
+      const pdfText = await parsePdf(file.buffer)
+
+      const textString = JSON.stringify(pdfText)
+
+
+      console.log(await cleanText(textString))
     } catch (error) {
       console.error('File upload failed:', error)
       res

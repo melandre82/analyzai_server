@@ -10,7 +10,7 @@ const fileController = new FileController()
 
 const upload = multer({ storage: multer.memoryStorage() })
 
-router.get('/', (req, res) => {
+router.post('/query', (req, res) => {
   res.send('Hello World!')
 })
 

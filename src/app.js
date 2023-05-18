@@ -3,7 +3,7 @@ import { OpenAI } from 'langchain/llms/openai'
 import dotenv from 'dotenv'
 import { createRequire } from 'module'
 import { PdfLoader } from './functions/dataloaders/pdfloader.js'
-import { TextSplitter } from './functions/textsplitter/textsplitter.js'
+import { TextSplitter } from './functions/text-manipulation/textsplitter.js'
 import { VectorConverter } from './functions/database-interaction/vectorconverter.js'
 import path from 'path'
 import { connectDB } from './config/mongoose.js'
@@ -16,7 +16,7 @@ async function loadEnvironmentVariables() {
 
 try {
   await loadEnvironmentVariables()
-  await connectDB()
+  // await connectDB()
 
   // dotenv.config()
 
@@ -35,34 +35,26 @@ try {
   // }
 
   const pdfLoader = new PdfLoader()
-  const filePath = 'src/porsche.pdf'
+  const filePath = 'uploads/1683154124729-1683146090114-porsche.pdf'
   const absolutePath = path.resolve(filePath)
 
   const pdfText = await pdfLoader.load(`${absolutePath}`)
 
   const textString = JSON.stringify(pdfText)
 
-  //   console.log(await pdfLoader.load(`${absolutePath}`))
 
   const textSplitter = new TextSplitter()
 
-//   const documents = []
 
   const doc = await textSplitter.splitText(textString, 1000)
 
-//   documents.push(doc)
+  console.log(doc)
 
-  const vectorConverter = new VectorConverter()
+  // const vectorConverter = new VectorConverter()
 
-//   for (const document of documents) {
-//     if (document !== null && document !== undefined) {
-//       await vectorConverter.index(document)
-//     }
-//   }
+  // await vectorConverter.index(doc)
 
-  await vectorConverter.index(doc)
-
-  vectorConverter.query('give a summary of the history of porsche')
+  // vectorConverter.query('give a summary of the history of porsche')
 } catch (error) {
   console.log(error)
 }
