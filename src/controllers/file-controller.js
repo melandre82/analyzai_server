@@ -9,7 +9,7 @@
 // } from 'firebase/storage'
 // import { firebaseConfig } from '../config/firebase.js'
 import { TextSplitter } from '../functions/text-manipulation/textsplitter.js'
-import { VectorConverter } from '../functions/database-interaction/vectorconverter.js'
+import { VectorManager } from '../functions/database-interaction/vectorManager.js'
 import { parsePdf } from '../functions/dataloaders/parsePdf.js'
 import { cleanText } from '../functions/text-manipulation/cleanText.js'
 import bucket from '../config/firebaseAdmin.cjs'
@@ -20,7 +20,7 @@ import bucket from '../config/firebaseAdmin.cjs'
 
 const textSplitter = new TextSplitter()
 
-const vectorConverter = new VectorConverter()
+const vectorManager = new VectorManager()
 
 // const pdfLoader = new PdfLoader()
 
@@ -79,7 +79,7 @@ export class FileController {
 
       const doc = await textSplitter.splitText(pdfText, 1000, `${file.originalname}`)
 
-      await vectorConverter.index(doc)
+      await vectorManager.index(doc)
 
       console.log(doc)
     } catch (error) {

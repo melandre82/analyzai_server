@@ -10,7 +10,7 @@ import { DocumentIdentifier } from '../../../models/document-id.js'
 
 dotenv.config()
 
-export class VectorConverter {
+export class VectorManager {
   #client
   #pineconeIndex
   #initialized
@@ -52,7 +52,7 @@ export class VectorConverter {
       { pineconeIndex: this.#pineconeIndex }
     )
 
-    console.log('query: ' + query)
+    // console.log('query: ' + query)
 
     /* Search the vector DB independently with meta filters */
     // const results = await vectorStore.similaritySearch('pinecone', 1, {
@@ -75,6 +75,7 @@ export class VectorConverter {
       returnSourceDocuments: true,
     })
     const response = await chain.call({ query: `${query}` })
-    console.log(response)
+    return response
+    // console.log(response)
   }
 }
