@@ -10,7 +10,7 @@
 // import { firebaseConfig } from '../config/firebase.js'
 import { TextSplitter } from '../functions/text-manipulation/textsplitter.js'
 import { VectorConverter } from '../functions/database-interaction/vectorconverter.js'
-import { parsePdf } from '../functions/dataloaders/pdfParse.js'
+import { parsePdf } from '../functions/dataloaders/parsePdf.js'
 import { cleanText } from '../functions/text-manipulation/cleanText.js'
 import bucket from '../config/firebaseAdmin.cjs'
 
@@ -69,10 +69,19 @@ export class FileController {
 
       const pdfText = await parsePdf(file.buffer)
 
-      const textString = JSON.stringify(pdfText)
+      // const textString = JSON.stringify(pdfText)
 
+      console.log(pdfText)
 
-      console.log(await cleanText(textString))
+      // await cleanText(textString)
+
+      // console.log('textstring: ' + textString)
+
+      const doc = await textSplitter.splitText(pdfText, 1000, `${file.originalname}`)
+
+      await vectorConverter.index(doc)
+
+      console.log(doc)
     } catch (error) {
       console.error('File upload failed:', error)
       res

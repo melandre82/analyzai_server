@@ -7,6 +7,7 @@ import { TextSplitter } from './functions/text-manipulation/textsplitter.js'
 import { VectorConverter } from './functions/database-interaction/vectorconverter.js'
 import path from 'path'
 import { connectDB } from './config/mongoose.js'
+import { cleanText } from './functions/text-manipulation/cleanText.js'
 
 createRequire(import.meta.url)
 
@@ -34,21 +35,25 @@ try {
   //   console.log(error)
   // }
 
-  const pdfLoader = new PdfLoader()
-  const filePath = 'uploads/1683154124729-1683146090114-porsche.pdf'
-  const absolutePath = path.resolve(filePath)
+  // const pdfLoader = new PdfLoader()
+  // const filePath = 'uploads/1683154124729-1683146090114-porsche.pdf'
+  // const absolutePath = path.resolve(filePath)
 
-  const pdfText = await pdfLoader.load(`${absolutePath}`)
+  // const pdfText = await pdfLoader.load(`${absolutePath}`)
 
-  const textString = JSON.stringify(pdfText)
+  // const textString = JSON.stringify(pdfText)
+
+  // console.log(textString)
+
+  console.log(cleanText('History \r\nOrigin \r\nFerdinand Porsche (1875–1951) founded the company'))
 
 
-  const textSplitter = new TextSplitter()
+  // const textSplitter = new TextSplitter()
 
 
-  const doc = await textSplitter.splitText(textString, 1000)
+  // const doc = await textSplitter.splitText(textString, 1000)
 
-  console.log(doc)
+  // console.log(doc)
 
   // const vectorConverter = new VectorConverter()
 
