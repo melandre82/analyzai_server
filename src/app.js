@@ -35,20 +35,15 @@ try {
   //   console.log(error)
   // }
 
-  const pdfLoader = new PdfLoader()
-  const filePath = 'uploads/1683154124729-1683146090114-porsche.pdf'
-  const absolutePath = path.resolve(filePath)
+  // const pdfLoader = new PdfLoader()
+  // const filePath = 'uploads/1683154124729-1683146090114-porsche.pdf'
+  // const absolutePath = path.resolve(filePath)
 
-  const pdfText = await pdfLoader.load(`${absolutePath}`)
-
-
-
+  // const pdfText = await pdfLoader.load(`${absolutePath}`)
 
   // console.log(cleanText('History \r\nOrigin \r\nFerdinand Porsche (1875–1951) founded the company'))
 
-
   // const textSplitter = new TextSplitter()
-
 
   // const doc = await textSplitter.splitText(textString, 1000)
 
@@ -59,6 +54,28 @@ try {
   // await vectorConverter.index(doc)
 
   // vectorConverter.query('give a summary of the history of porsche')
+
+  // To enable streaming, we pass in `streaming: true` to the LLM constructor.
+  // Additionally, we pass in a handler for the `handleLLMNewToken` event.
+  // const chat = new OpenAI({
+  //   maxTokens: 25,
+  //   streaming: true,
+  // })
+
+  // const response = await chat.call('Tell me a joke.', undefined, [
+  //   {
+  //     handleLLMNewToken(token) {
+  //       console.log({ token })
+  //     },
+  //   },
+  // ])
+  // console.log(response)
+
+  const vectorManager = new VectorManager()
+
+  const query = 'What is the history of Porsche?'
+
+  console.log(await vectorManager.queryWithStreaming(query))
 } catch (error) {
   console.log(error)
 }

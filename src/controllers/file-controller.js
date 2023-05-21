@@ -77,11 +77,17 @@ export class FileController {
 
       // console.log('textstring: ' + textString)
 
-      const doc = await textSplitter.splitText(pdfText, 1000, `${file.originalname}`)
+      const doc = await textSplitter.splitText(
+        pdfText,
+        1000,
+        `${file.originalname}`
+      )
 
       await vectorManager.index(doc)
 
-      console.log(doc)
+      res.status(200).json('File uploaded successfully.')
+
+      // console.log(doc)
     } catch (error) {
       console.error('File upload failed:', error)
       res

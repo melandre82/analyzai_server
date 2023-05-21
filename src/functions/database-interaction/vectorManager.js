@@ -31,7 +31,6 @@ export class VectorManager {
   async index(docs) {
     await this.#initialized
 
-
     for (const doc of docs) {
       doc.pageContent.replace((/\n/g, ' '))
       console.log(doc.metadata)
@@ -52,29 +51,40 @@ export class VectorManager {
       { pineconeIndex: this.#pineconeIndex }
     )
 
-    // console.log('query: ' + query)
-
-    /* Search the vector DB independently with meta filters */
-    // const results = await vectorStore.similaritySearch('pinecone', 1, {
-    //   foo: 'bar',
-    // })
-    // console.log(results)
-    /*
-    [
-      Document {
-        pageContent: 'pinecone is a vector db',
-        metadata: { foo: 'bar' }
-      }
-    ]
-    */
-
-    /* Use as part of a chain (currently no metadata filters) */
     const model = new OpenAI()
+
     const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
       k: 1,
       returnSourceDocuments: true,
     })
     const response = await chain.call({ query: `${query}` })
+    return response
+    // console.log(response)
+  }
+
+  async queryWithStreaming(query) {
+    await this.#initialized
+    const vectorStore = await PineconeStore.fromExistingIndex(
+      new OpenAIEmbeddings(),
+      { pineconeIndex: this.#pineconeIndex }
+    )
+
+    const model = new OpenAI({
+      maxTokens: -1,
+      streaming: true,
+    })
+
+    const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
+      k: 1,
+      returnSourceDocuments: true,
+    })
+    const response = await chain.call({ query: `${query}` }, [
+      {
+        handleLLMNewToken(token) {
+          console.log({ token })
+        },
+      },
+    ])
     return response
     // console.log(response)
   }

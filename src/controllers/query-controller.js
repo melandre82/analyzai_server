@@ -11,7 +11,10 @@ export class QueryController {
 
       const results = await vectorManager.query(query)
 
-      console.log(results)
+      //   console.log(results)
+
+      console.log(JSON.stringify(results, null, 2))
+      //   console.log(JSON.parse())
 
       res.status(200).json(results)
     } catch (error) {
