@@ -12,8 +12,7 @@ import { dirname } from 'path'
 import { createRequire } from 'module'
 import { fileURLToPath, URL } from 'url'
 // import { dirname } from 'path';
-import * as admin from 'firebase-admin'
-import bucket from './config/firebaseAdmin.cjs'
+import { Server } from 'socket.io'
 
 try {
   dotenv.config()
@@ -21,40 +20,6 @@ try {
   // Import required modules and packages
 
   dotenv.config()
-
-  // const __filename = fileURLToPath(import.meta.url)
-  // const __dirname = dirname(__filename)
-
-  // // Replace with the path to your service account JSON file
-  // const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON)
-
-  // const firebaseConfig = {
-  //   storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
-  // }
-
-  // admin.initializeApp({
-  //   credential: admin.credential.cert(serviceAccount),
-  //   storageBucket: firebaseConfig.storageBucket,
-  // })
-
-  // const bucket = admin.storage().bucket()
-
-  // const __filename = fileURLToPath(import.meta.url)
-  // const __dirname = dirname(__filename)
-  // const require = createRequire(import.meta.url)
-
-  // const serviceAccount = require('../analyzai-firebase-adminsdk-i35vb-60450401da.json')
-
-  // admin.initializeApp({
-  //   credential: admin.credential.cert(serviceAccount),
-  //   storageBucket: firebaseConfig.storageBucket,
-  // })
-
-  // initializeApp(firebaseConfig)
-
-  // await connectDB()
-
-  // Firebase Admin SDK
 
   const app = express()
 
@@ -75,8 +40,25 @@ try {
 
   app.use('/', router)
 
-  app.listen(process.env.PORT, () => {
+  const server = app.listen(process.env.PORT, () => {
     console.log(`Server running on PORT ${process.env.PORT} 🚀`)
+  })
+
+  const io = new Server(server, {
+    cors: {
+      origin: process.env.CLIENT_URL,
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+      credentials: true,
+    },
+  })
+
+  io.on('connection', (socket) => {
+    console.log('socket.io: a user connected')
+
+    socket.on('disconnect', () => {
+      console.log('socket.io: a user disconnected')
+    })
   })
 } catch (error) {
   console.log(error)
