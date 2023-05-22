@@ -28,8 +28,6 @@ export class VectorManager {
       environment: process.env.PINECONE_ENVIRONMENT,
     })
     this.#pineconeIndex = this.#client.Index(process.env.PINECONE_INDEX)
-
-   
   }
 
   async index(docs) {
@@ -84,15 +82,30 @@ export class VectorManager {
       returnSourceDocuments: true,
     })
 
+    // const response = await chain.call({ query: `${query}` }, [
+    //   {
+    //     handleLLMNewToken: (token) => {
+    //       this.socket.emit('newToken', token)
+    //       console.log({ token })
+    //     },
+    //   },
+    // ])
+    // return response
+
+    this.socket.emit('responseStart')
+
     const response = await chain.call({ query: `${query}` }, [
       {
         handleLLMNewToken: (token) => {
-          this.socket.emit('newToken', token)
-          console.log({ token })
+          this.socket.emit('newToken', { token: token, type: 'server' })
+          console.log({ token: token, type: 'server' })
         },
       },
     ])
+    // this.socket.emit('responseComplete')
     return response
+    
+
     // console.log(response)
   }
 }
