@@ -7,12 +7,15 @@ import { VectorDBQAChain } from 'langchain/chains'
 import { OpenAI } from 'langchain/llms/openai'
 import CryptoJS from 'crypto-js'
 import { DocumentIdentifier } from '../../../models/document-id.js'
+import { getIo } from '../../socket.js'
+
 dotenv.config()
 
 export class VectorManager {
   #client
   #pineconeIndex
   #initialized
+  socket
 
   constructor() {
     this.#initialized = this.#init()
@@ -25,6 +28,8 @@ export class VectorManager {
       environment: process.env.PINECONE_ENVIRONMENT,
     })
     this.#pineconeIndex = this.#client.Index(process.env.PINECONE_INDEX)
+
+   
   }
 
   async index(docs) {
@@ -62,6 +67,7 @@ export class VectorManager {
   }
 
   async queryWithStreaming(query) {
+    this.socket = getIo()
     await this.#initialized
     const vectorStore = await PineconeStore.fromExistingIndex(
       new OpenAIEmbeddings(),
@@ -77,10 +83,11 @@ export class VectorManager {
       k: 1,
       returnSourceDocuments: true,
     })
+
     const response = await chain.call({ query: `${query}` }, [
       {
-        handleLLMNewToken(token) {
-          socket.emit('newToken', token)
+        handleLLMNewToken: (token) => {
+          this.socket.emit('newToken', token)
           console.log({ token })
         },
       },

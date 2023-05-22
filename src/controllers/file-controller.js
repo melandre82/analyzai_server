@@ -13,6 +13,7 @@ import { VectorManager } from '../functions/database-interaction/vectorManager.j
 import { parsePdf } from '../functions/dataloaders/parsePdf.js'
 import { cleanText } from '../functions/text-manipulation/cleanText.js'
 import bucket from '../config/firebaseAdmin.cjs'
+import { getIo } from '../socket.js'
 
 // initializeApp(firebaseConfig)
 
@@ -27,6 +28,14 @@ const vectorManager = new VectorManager()
 export class FileController {
   async receiveFile(req, res, next) {
     try {
+
+
+      // const io = getIo()
+
+      // io.emit('hello', 'hello')
+
+
+
       const dateTime = Date.now()
       const file = req.file
       const remoteFilePath = `${dateTime}-${file.originalname}`

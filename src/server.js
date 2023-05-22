@@ -12,8 +12,7 @@ import { dirname } from 'path'
 import { createRequire } from 'module'
 import { fileURLToPath, URL } from 'url'
 // import { dirname } from 'path';
-import { Server } from 'socket.io'
-import { Socket } from './socket.js'
+import { initSocket, getIo } from './socket.js'
 
 try {
   dotenv.config()
@@ -45,7 +44,9 @@ try {
     console.log(`Server running on PORT ${process.env.PORT} 🚀`)
   })
 
-  const socket = new Socket(server)
+  initSocket(server)
+
+  const io = getIo()
 } catch (error) {
   console.log(error)
 }
