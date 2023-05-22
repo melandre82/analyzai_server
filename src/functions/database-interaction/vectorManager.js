@@ -7,7 +7,6 @@ import { VectorDBQAChain } from 'langchain/chains'
 import { OpenAI } from 'langchain/llms/openai'
 import CryptoJS from 'crypto-js'
 import { DocumentIdentifier } from '../../../models/document-id.js'
-
 dotenv.config()
 
 export class VectorManager {
@@ -81,6 +80,7 @@ export class VectorManager {
     const response = await chain.call({ query: `${query}` }, [
       {
         handleLLMNewToken(token) {
+          socket.emit('newToken', token)
           console.log({ token })
         },
       },

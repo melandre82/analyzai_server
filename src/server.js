@@ -13,6 +13,7 @@ import { createRequire } from 'module'
 import { fileURLToPath, URL } from 'url'
 // import { dirname } from 'path';
 import { Server } from 'socket.io'
+import { Socket } from './socket.js'
 
 try {
   dotenv.config()
@@ -44,22 +45,7 @@ try {
     console.log(`Server running on PORT ${process.env.PORT} 🚀`)
   })
 
-  const io = new Server(server, {
-    cors: {
-      origin: process.env.CLIENT_URL,
-      methods: ['GET', 'POST', 'PUT', 'DELETE'],
-      allowedHeaders: ['Content-Type', 'Authorization'],
-      credentials: true,
-    },
-  })
-
-  io.on('connection', (socket) => {
-    console.log('socket.io: a user connected')
-
-    socket.on('disconnect', () => {
-      console.log('socket.io: a user disconnected')
-    })
-  })
+  const socket = new Socket(server)
 } catch (error) {
   console.log(error)
 }

@@ -2,7 +2,10 @@
 
 import { VectorManager } from '../functions/database-interaction/vectorManager.js'
 
+
 const vectorManager = new VectorManager()
+
+
 
 export class QueryController {
   async query(req, res) {
