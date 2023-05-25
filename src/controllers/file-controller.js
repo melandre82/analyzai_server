@@ -90,8 +90,6 @@ const vectorManager = new VectorManager()
 //   }
 // }
 
-
-
 export class FileController {
   async receiveFile(req, res, next) {
     try {
@@ -101,9 +99,8 @@ export class FileController {
       const uid = req.body.uid
       const remoteFilePath = `${uid}/${dateTime}-${file.originalname}`
 
-      if (await admin.auth().getUser(uid)
-      ) {
-        console.log('user exists')
+      if (!(await admin.auth().getUser(uid))) {
+        return
       }
 
       // Create a new file in Firebase Storage and upload the data
@@ -124,22 +121,30 @@ export class FileController {
       writeStream.on('finish', async () => {
         console.log('File uploaded successfully.')
 
-        // Get the download URL
+
         const downloadURL = await firebaseFile.getSignedUrl({
           action: 'read',
-          expires: '03-01-2030',
+          expires: '03-01-2199',
         })
 
-        // Send the response
-        // res.send({
-        //   message: 'file uploaded to firebase storage',
-        //   name: file.originalname,
-        //   type: file.mimetype,
-        //   downloadURL: downloadURL[0],
-        // })
+        const firestore = admin.firestore()
+        const metadata = {
+          fileName: file.originalname,
+          downloadURL: downloadURL[0],
+          uid: uid,
+
+        }
+        await firestore
+          .collection('users')
+          .doc(uid)
+          .collection('files')
+          .doc(file.originalname)
+          .set(metadata)
+
+        console.log('downloadURL: ' + downloadURL)
       })
 
-      // Upload the file
+
       writeStream.end(file.buffer)
 
       const pdfText = await parsePdf(file.buffer)
