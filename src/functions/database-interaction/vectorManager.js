@@ -30,7 +30,7 @@ export class VectorManager {
     this.#pineconeIndex = this.#client.Index(process.env.PINECONE_INDEX)
   }
 
-  async index(docs) {
+  async index(docs, uid) {
     await this.#initialized
 
     for (const doc of docs) {
@@ -40,36 +40,34 @@ export class VectorManager {
 
     await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
       pineconeIndex: this.#pineconeIndex,
+      namespace: `${uid}`
     })
-    // await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
-    //   pineconeIndex: this.#pineconeIndex,
-    // })
   }
 
-  async query(query) {
-    await this.#initialized
-    const vectorStore = await PineconeStore.fromExistingIndex(
-      new OpenAIEmbeddings(),
-      { pineconeIndex: this.#pineconeIndex }
-    )
+  // async query(query) {
+  //   await this.#initialized
+  //   const vectorStore = await PineconeStore.fromExistingIndex(
+  //     new OpenAIEmbeddings(),
+  //     { pineconeIndex: this.#pineconeIndex }
+  //   )
 
-    const model = new OpenAI()
+  //   const model = new OpenAI()
 
-    const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-      k: 1,
-      returnSourceDocuments: true,
-    })
-    const response = await chain.call({ query: `${query}` })
-    return response
-    // console.log(response)
-  }
+  //   const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
+  //     k: 1,
+  //     returnSourceDocuments: true,
+  //   })
+  //   const response = await chain.call({ query: `${query}` })
+  //   return response
+  //   // console.log(response)
+  // }
 
-  async queryWithStreaming(query) {
+  async queryWithStreaming(query, uid) {
     this.socket = getIo()
     await this.#initialized
     const vectorStore = await PineconeStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      { pineconeIndex: this.#pineconeIndex }
+      { pineconeIndex: this.#pineconeIndex, namespace: `${uid}` }
     )
 
     const model = new OpenAI({
@@ -104,7 +102,6 @@ export class VectorManager {
     ])
     // this.socket.emit('responseComplete')
     return response
-    
 
     // console.log(response)
   }

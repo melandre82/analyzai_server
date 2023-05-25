@@ -13,6 +13,8 @@ export class QueryController {
     try {
       const query = req.body.query
 
+      const uid = req.body.uid
+
       const io = getIo()
 
 
@@ -20,7 +22,7 @@ export class QueryController {
 
       // const results = await vectorManager.query(query)
 
-      const results = await vectorManager.queryWithStreaming(query)
+      const results = await vectorManager.queryWithStreaming(query, uid)
 
       io.emit('hello', results)
 

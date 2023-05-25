@@ -20,3 +20,7 @@ router.post('/query', (req, res) => {
 router.post('/upload', upload.single('file'), (req, res, next) => {
   fileController.receiveFile(req, res, next)
 })
+
+// router.post('/upload', upload.any(), (req, res, next) => {
+//   fileController.receiveFile(req, res, next)
+// })

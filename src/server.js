@@ -38,6 +38,8 @@ try {
 
   app.use(express.json())
 
+  app.use(express.urlencoded({ extended: false }))
+
   app.use('/', router)
 
   const server = app.listen(process.env.PORT, () => {
