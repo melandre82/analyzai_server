@@ -2,10 +2,12 @@
 import { TextSplitter } from '../functions/text-manipulation/textsplitter.js'
 import { VectorManager } from '../functions/database-interaction/vectorManager.js'
 import { parsePdf } from '../functions/dataloaders/parsePdf.js'
-import { cleanText } from '../functions/text-manipulation/cleanText.js'
+// import { PdfLoader } from '../functions/dataloaders/pdfloader.js'
+
+
 import bucket from '../config/firebaseAdmin.cjs'
-import { getIo } from '../socket.js'
 import admin from 'firebase-admin'
+
 
 // initializeApp(firebaseConfig)
 
@@ -100,7 +102,7 @@ export class FileController {
       const remoteFilePath = `${uid}/${dateTime}-${file.originalname}`
 
       if (!(await admin.auth().getUser(uid))) {
-        return
+        throw new Error('User does not exist')
       }
 
       // Create a new file in Firebase Storage and upload the data
@@ -121,7 +123,6 @@ export class FileController {
       writeStream.on('finish', async () => {
         console.log('File uploaded successfully.')
 
-
         const downloadURL = await firebaseFile.getSignedUrl({
           action: 'read',
           expires: '03-01-2199',
@@ -132,7 +133,6 @@ export class FileController {
           fileName: file.originalname,
           downloadURL: downloadURL[0],
           uid: uid,
-
         }
         await firestore
           .collection('users')
@@ -144,18 +144,17 @@ export class FileController {
         console.log('downloadURL: ' + downloadURL)
       })
 
-
       writeStream.end(file.buffer)
 
       const pdfText = await parsePdf(file.buffer)
 
-      // const textString = JSON.stringify(pdfText)
+      // const pdfText = await pdfLoader.load(file.buffer)
 
-      console.log(pdfText)
+      // const pdfloader = new PdfLoader()
 
-      // await cleanText(textString)
+      // const pdfText = await pdfloader.load(file.buffer)
 
-      // console.log('textstring: ' + textString)
+      console.log('pdf text ' + pdfText)
 
       const doc = await textSplitter.splitText(
         pdfText,

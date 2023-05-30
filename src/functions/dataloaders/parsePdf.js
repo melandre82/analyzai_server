@@ -1,16 +1,21 @@
-import PDFParser from 'pdf2json'
+/* eslint-disable jsdoc/require-jsdoc */
 
-export function parsePdf(buffer) {
+import { PDFExtract } from 'pdf.js-extract'
+
+export async function parsePdf(buffer) {
+  const pdfExtract = new PDFExtract()
+  const options = {}
+
   return new Promise((resolve, reject) => {
-    const pdfParser = new PDFParser(this, 1)
+    pdfExtract.extractBuffer(buffer, options, (err, data) => {
+      if (err) return reject(err)
 
-    pdfParser.on('pdfParser_dataError', (errData) =>
-      reject(errData.parserError)
-    )
-    pdfParser.on('pdfParser_dataReady', (pdfData) => {
-      resolve(pdfParser.getRawTextContent())
+      const textPages = data.pages.map((page) => {
+        return page.content.map((item) => item.str).join('')
+      })
+
+      resolve(textPages.join(''))
     })
-
-    pdfParser.parseBuffer(buffer)
   })
 }
+

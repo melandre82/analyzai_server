@@ -33,34 +33,34 @@ export class VectorManager {
   async index(docs, uid) {
     await this.#initialized
 
-    for (const doc of docs) {
-      doc.pageContent.replace((/\n/g, ' '))
-      console.log(doc.metadata)
-    }
+    // for (const doc of docs) {
+    //   doc.pageContent.replace((/\n/g, ' '))
+    //   console.log(doc.metadata)
+    // }
 
     await PineconeStore.fromDocuments(docs, new OpenAIEmbeddings(), {
       pineconeIndex: this.#pineconeIndex,
-      namespace: `${uid}`
+      namespace: `${uid}`,
     })
   }
 
-  // async query(query) {
-  //   await this.#initialized
-  //   const vectorStore = await PineconeStore.fromExistingIndex(
-  //     new OpenAIEmbeddings(),
-  //     { pineconeIndex: this.#pineconeIndex }
-  //   )
+  async query(query) {
+    await this.#initialized
+    const vectorStore = await PineconeStore.fromExistingIndex(
+      new OpenAIEmbeddings(),
+      { pineconeIndex: this.#pineconeIndex }
+    )
 
-  //   const model = new OpenAI()
+    const model = new OpenAI()
 
-  //   const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-  //     k: 1,
-  //     returnSourceDocuments: true,
-  //   })
-  //   const response = await chain.call({ query: `${query}` })
-  //   return response
-  //   // console.log(response)
-  // }
+    const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
+      k: 1,
+      returnSourceDocuments: true,
+    })
+    const response = await chain.call({ query: `${query}` })
+    return response
+    // console.log(response)
+  }
 
   async queryWithStreaming(query, uid) {
     this.socket = getIo()
@@ -80,16 +80,6 @@ export class VectorManager {
       returnSourceDocuments: true,
     })
 
-    // const response = await chain.call({ query: `${query}` }, [
-    //   {
-    //     handleLLMNewToken: (token) => {
-    //       this.socket.emit('newToken', token)
-    //       console.log({ token })
-    //     },
-    //   },
-    // ])
-    // return response
-
     this.socket.emit('responseStart')
 
     const response = await chain.call({ query: `${query}` }, [
@@ -104,5 +94,14 @@ export class VectorManager {
     return response
 
     // console.log(response)
+  }
+
+  async deleteNamespace(uid) {
+    await this.#initialized
+
+    await this.#pineconeIndex.delete1({
+      deleteAll: true,
+      namespace: `${uid}`,
+    })
   }
 }

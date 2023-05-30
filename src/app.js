@@ -1,13 +1,11 @@
 /* eslint-disable jsdoc/require-jsdoc */
-import { OpenAI } from 'langchain/llms/openai'
 import dotenv from 'dotenv'
 import { createRequire } from 'module'
 import { PdfLoader } from './functions/dataloaders/pdfloader.js'
 import { TextSplitter } from './functions/text-manipulation/textsplitter.js'
-import { VectorManager } from './functions/database-interaction/vectorManager.js'
-import path from 'path'
-import { connectDB } from './config/mongoose.js'
-import { cleanText } from './functions/text-manipulation/cleanText.js'
+
+
+
 
 createRequire(import.meta.url)
 
@@ -71,11 +69,20 @@ try {
   // ])
   // console.log(response)
 
-  const vectorManager = new VectorManager()
+  // const vectorManager = new VectorManager()
 
-  const query = 'What is the history of Porsche?'
+  // const query = 'What is the history of Porsche?'
 
-  console.log(await vectorManager.queryWithStreaming(query))
+  // console.log(await vectorManager.queryWithStreaming(query))
+
+
+  const text = 'What is the history of Porsche?'
+
+  const pdfLoader = new PdfLoader()
+
+  const doc = await pdfLoader.load(text)
+
+  // vectorManager.deleteNamespace()
 } catch (error) {
   console.log(error)
 }

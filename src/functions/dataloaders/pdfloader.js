@@ -2,18 +2,22 @@
 // import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
 // import PdfParse from 'pdf-parse'
 
-import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
+// import { PDFLoader } from 'langchain/document_loaders/fs/pdf'
+import { BufferLoader } from 'langchain/document_loaders/fs/buffer'
 
 export class PdfLoader {
-  async load (src) {
-    const pdfLoader = new PDFLoader(src, { splitPages: false })
+  async load(src) {
+    // Convert Buffer to Blob-like object
+    const blobLikeObject = {
+      arrayBuffer: () => Promise.resolve(Uint8Array.from(src).buffer)
+    }
 
-    const docs = pdfLoader.load()
+    const pdfLoader = new BufferLoader(blobLikeObject, { splitPages: false })
 
-    return docs
+    const doc = await pdfLoader.load()
+
+    return doc
   }
 }
 
 // pdfParser.js
-
-
