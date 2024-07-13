@@ -13,7 +13,6 @@ export async function parsePdf(buffer) {
       const textPages = data.pages.map((page) => {
         return page.content.map((item) => item.str).join('')
       })
-
       resolve(textPages.join(''))
     })
   })

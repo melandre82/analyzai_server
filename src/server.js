@@ -27,8 +27,18 @@ try {
     origin: `${process.env.CLIENT_URL}`,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true,
+    credentials: true
   }
+
+  // app.use((req, res, next) => {
+  //   res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL)
+  //   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, multipart/form-data')
+  //   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+  //   res.header('Access-Control-Allow-Credentials', 'true')
+  //   next()
+  // })
+
+  console.log('CORS is allowing: ', process.env.CLIENT_URL)
 
   app.use(cors(corsOptions))
 
@@ -41,6 +51,12 @@ try {
   app.use(express.urlencoded({ extended: false }))
 
   app.use('/', router)
+
+  app.use((req, res, next) => {
+    const fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl
+    console.log(`Received ${req.method} request at ${fullUrl}`)
+    next()
+  })
 
   const server = app.listen(process.env.PORT, () => {
     console.log(`Server running on PORT ${process.env.PORT} 🚀`)
