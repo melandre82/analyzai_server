@@ -8,18 +8,17 @@ import { getIo } from '../../socket.js'
 
 dotenv.config()
 
-
 export class VectorManager {
   #client
   #pineconeIndex
   #initialized
   socket
 
-  constructor() {
+  constructor () {
     this.#initialized = this.#init()
   }
 
-  async #init() {
+  async #init () {
     this.#client = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY
     })
@@ -27,7 +26,7 @@ export class VectorManager {
     this.#pineconeIndex = this.#client.Index(process.env.PINECONE_INDEX)
   }
 
-  async index(docs, uid) {
+  async index (docs, uid) {
     await this.#initialized
 
     // for (const doc of docs) {
@@ -44,25 +43,34 @@ export class VectorManager {
     }
   }
 
-  async query(query) {
+  async query (query, uid) {
     await this.#initialized
     const vectorStore = await PineconeStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      { pineconeIndex: this.#pineconeIndex }
+      { pineconeIndex: this.#pineconeIndex, namespace: `${uid}` }
     )
 
-    const model = new OpenAI()
+    console.log(uid)
 
-    const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-      k: 1,
+    const response = await vectorStore.similaritySearch(query, 1, {
       returnSourceDocuments: true
     })
-    const response = await chain.call({ query: `${query}` })
+
     return response
+
+
+    // const model = new OpenAI()
+
+    // const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
+    //   k: 1,
+    //   returnSourceDocuments: true
+    // })
+    // const response = await chain.call({ query: `${query}` })
+    // return response
     // console.log(response)
   }
 
-  async queryWithStreaming(query, uid) {
+  async queryWithStreaming (query, uid) {
     this.socket = getIo()
     await this.#initialized
     const vectorStore = await PineconeStore.fromExistingIndex(
@@ -96,7 +104,7 @@ export class VectorManager {
     // console.log(response)
   }
 
-  async deleteNamespace(uid) {
+  async deleteNamespace (uid) {
     await this.#initialized
 
     await this.#pineconeIndex.delete1({

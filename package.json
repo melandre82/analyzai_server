@@ -27,6 +27,8 @@
     ]
   },
   "dependencies": {
+    "@langchain/openai": "^0.2.1",
+    "@langchain/pinecone": "^0.0.7",
     "@pinecone-database/pinecone": "^0.0.14",
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",

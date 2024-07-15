@@ -9,7 +9,7 @@ const vectorManager = new VectorManager()
 // const socket = new Socket()
 
 export class QueryController {
-  async query(req, res) {
+  async query (req, res) {
     try {
       const query = req.body.query
 
@@ -17,19 +17,16 @@ export class QueryController {
 
       const io = getIo()
 
-
       // io.emit('hello', 'hello bitch ass')
 
       // const results = await vectorManager.query(query)
 
-      const results = await vectorManager.queryWithStreaming(query, uid)
-
+      const results = await vectorManager.query(query, uid)
       io.emit('hello', results)
 
       //   console.log(results)
 
       console.log(JSON.stringify(results, null, 2))
-
 
       res.status(200).json(results)
     } catch (error) {
