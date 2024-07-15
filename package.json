@@ -7,7 +7,8 @@
   "scripts": {
     "devStart": "nodemon src/server.js",
     "start": "node src/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "testPinecone": "node test-pinecone-conn.js"
   },
   "repository": {
     "type": "git",
@@ -17,8 +18,14 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@lnu/eslint-config": "^1.1.7",
-    "dotenv": "^16.0.3",
+    "@lnu/eslint-config": "^1.1.10",
+    "dotenv": "^16.4.5",
+    "eslint": "^8.47.0",
+    "eslint-config-standard": "^17.1.0",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-jsdoc": "^46.5.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-promise": "^6.1.1",
     "langchain": "^0.0.66"
   },
   "eslintConfig": {
@@ -27,21 +34,28 @@
     ]
   },
   "dependencies": {
+    "@es-joy/jsdoccomment": "^0.46.0",
+    "@langchain/community": "^0.2.18",
+    "@langchain/core": "^0.2.15",
     "@langchain/openai": "^0.2.1",
     "@langchain/pinecone": "^0.0.7",
-    "@pinecone-database/pinecone": "^0.0.14",
+    "@pinecone-database/pinecone": "^2.2.2",
+    "chromadb": "^1.8.1",
+    "chromadb-default-embed": "^2.13.2",
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
     "express": "^4.18.2",
     "firebase": "^9.21.0",
-    "firebase-admin": "^11.8.0",
+    "firebase-admin": "^11.11.1",
     "mongoose": "^7.1.0",
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "nodemon": "^2.0.22",
     "pdf-parse": "^1.1.1",
+    "pdf.js-extract": "^0.2.1",
     "pdf2json": "^2.0.2",
     "pdfjs-dist": "^3.6.172",
+    "pinecone-client": "^2.0.0",
     "socket.io": "^4.6.1",
     "url": "^0.11.0"
   }
