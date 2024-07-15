@@ -154,7 +154,7 @@ export class FileController {
 
       // const pdfText = await pdfloader.load(file.buffer)
 
-      // console.log('pdf text ' + pdfText)
+      console.log('pdf text ' + pdfText)
 
       const doc = await textSplitter.splitText(
         pdfText,
