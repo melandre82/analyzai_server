@@ -14,11 +14,19 @@ import {
   RunnablePassthrough,
   RunnableSequence
 } from '@langchain/core/runnables'
-import { formatDocumentsAsString } from 'langchain/util/document'
+// import type { Document } from '@langchain/core/documents'
 import { StringOutputParser } from '@langchain/core/output_parsers'
+import { createRetrievalChain } from 'langchain/chains/retrieval'
+
+(async () => {
+  const langchain = await import('langchain')
+})()
 
 dotenv.config()
 
+const formatDocumentsAsString = (documents) => {
+  return documents.map((document) => document.pageContent).join('\n\n')
+}
 export class VectorManager {
   #client
   #pineconeIndex
@@ -75,23 +83,51 @@ export class VectorManager {
       streaming: true
     })
 
-    const chain = RunnableSequence.from([
+    const chain = createRetrievalChain(model, vectorStore, {
+      k: 1,
+      returnSourceDocuments: true
+    })
+
+    const response = await chain.call({ query: `${query}` }, [
       {
-        context: vectorStoreRetriever.pipe(formatDocumentsAsString),
-        question: new RunnablePassthrough()
-      },
-      prompt,
-      model,
-      new StringOutputParser()
+        handleLLMNewToken: (token) => {
+          this.socket.emit('newToken', { token, type: 'server' })
+          console.log({ token, type: 'server' })
+        }
+      }
     ])
 
-    const answer = await chain.invoke(
-      'say hello if you are receiving this'
-    )
+    console.log(response)
 
-    console.log(answer)
+    // const chain = RunnableSequence.from([
+    //   {
+    //     // Extract the "question" field from the input object and pass it to the retriever as a string
+    //     sourceDocuments: RunnableSequence.from([
+    //       (input) => input.question,
+    //       vectorStoreRetriever
+    //     ]),
+    //     question: (input) => input.question
+    //   },
+    //   {
+    //     // Pass the source documents through unchanged so that we can return them directly in the final result
+    //     sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
+    //     question: (previousStepResult) => previousStepResult.question,
+    //     context: (previousStepResult) =>
+    //       formatDocumentsAsString(previousStepResult.sourceDocuments)
+    //   },
+    //   {
+    //     result: prompt.pipe(model).pipe(new StringOutputParser()),
+    //     sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments
+    //   }
+    // ])
 
-    return answer
+    const res = await vectorStoreRetriever.invoke({
+      question: query
+    })
+
+    console.log(res)
+
+    // return answer
 
     // const results = await vectorStore.similaritySearch(`${query}`, 1, {
     // });
