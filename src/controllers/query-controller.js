@@ -17,9 +17,10 @@ export class QueryController {
 
       const io = getIo()
 
-      // io.emit('hello', 'hello bitch ass')
 
       // const results = await vectorManager.query(query)
+
+      console.log('uid: ' + uid)
 
       const results = await vectorManager.query(query, uid)
       io.emit('hello', results)

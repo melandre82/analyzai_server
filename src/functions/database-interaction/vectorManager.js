@@ -3,24 +3,22 @@ import { Pinecone } from '@pinecone-database/pinecone'
 import { OpenAIEmbeddings, OpenAI } from '@langchain/openai'
 import { PineconeStore } from '@langchain/pinecone'
 import * as dotenv from 'dotenv'
-import { VectorDBQAChain } from 'langchain/chains'
+// import { VectorDBQAChain } from 'langchain/chains'
 import { getIo } from '../../socket.js'
 import {
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate
 } from '@langchain/core/prompts'
-import {
-  RunnablePassthrough,
-  RunnableSequence
-} from '@langchain/core/runnables'
-// import type { Document } from '@langchain/core/documents'
-import { StringOutputParser } from '@langchain/core/output_parsers'
-import { createRetrievalChain } from 'langchain/chains/retrieval'
+// import {
+//   RunnablePassthrough,
+//   RunnableSequence
+// } from '@langchain/core/runnables'
+// // import type { Document } from '@langchain/core/documents'
+// import { StringOutputParser } from '@langchain/core/output_parsers'
+import { loadQAMapReduceChain } from 'langchain/chains'
 
-(async () => {
-  const langchain = await import('langchain')
-})()
+import { createRetrievalChain } from 'langchain/chains/retrieval'
 
 dotenv.config()
 
@@ -58,90 +56,42 @@ export class VectorManager {
     }
   }
 
-  async query (query) {
+  async query (query, uid) {
     await this.#initialized
+    console.log('from vectormanager: ' + uid)
+
+    const dbConfig = {
+      pineconeIndex: this.#pineconeIndex,
+      namespace: `${uid}`
+    }
+
     const vectorStore = await PineconeStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      { pineconeIndex: this.#pineconeIndex }
+      dbConfig
     )
 
-    const vectorStoreRetriever = vectorStore.asRetriever()
 
-    const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
-                              If you don't know the answer, just say that you don't know, don't try to make up an answer.
-                              ----------------
-                              {context}`
 
-    const messages = [
-      SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
-      HumanMessagePromptTemplate.fromTemplate('{question}')
-    ]
-    const prompt = ChatPromptTemplate.fromMessages(messages)
+    console.log(vectorStore)
 
     const model = new OpenAI({
       maxTokens: -1,
       streaming: true
     })
 
-    const chain = createRetrievalChain(model, vectorStore, {
-      k: 1,
-      returnSourceDocuments: true
+    const vectorStoreRetriever = vectorStore.asRetriever()
+
+    const relevantDocs = await vectorStoreRetriever.invoke(query)
+
+    const mapReduceChain = loadQAMapReduceChain(model)
+
+    const answer = await mapReduceChain.invoke({
+      question: query,
+      input_documents: relevantDocs
     })
 
-    const response = await chain.call({ query: `${query}` }, [
-      {
-        handleLLMNewToken: (token) => {
-          this.socket.emit('newToken', { token, type: 'server' })
-          console.log({ token, type: 'server' })
-        }
-      }
-    ])
-
-    console.log(response)
-
-    // const chain = RunnableSequence.from([
-    //   {
-    //     // Extract the "question" field from the input object and pass it to the retriever as a string
-    //     sourceDocuments: RunnableSequence.from([
-    //       (input) => input.question,
-    //       vectorStoreRetriever
-    //     ]),
-    //     question: (input) => input.question
-    //   },
-    //   {
-    //     // Pass the source documents through unchanged so that we can return them directly in the final result
-    //     sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
-    //     question: (previousStepResult) => previousStepResult.question,
-    //     context: (previousStepResult) =>
-    //       formatDocumentsAsString(previousStepResult.sourceDocuments)
-    //   },
-    //   {
-    //     result: prompt.pipe(model).pipe(new StringOutputParser()),
-    //     sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments
-    //   }
-    // ])
-
-    const res = await vectorStoreRetriever.invoke({
-      question: query
-    })
-
-    console.log(res)
-
-    // return answer
-
-    // const results = await vectorStore.similaritySearch(`${query}`, 1, {
-    // });
-    // console.log(results);
-
-    // const model = new OpenAI()
-
-    // const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-    //   k: 1,
-    //   returnSourceDocuments: true
-    // })
-    // const response = await chain.call({ query: `${query}` })
-    // return response
-    // console.log(response)
+    console.log(answer)
+    return answer
   }
 
   async queryWithStreaming (query, uid) {
