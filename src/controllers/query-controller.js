@@ -22,7 +22,7 @@ export class QueryController {
 
       console.log('uid: ' + uid)
 
-      const results = await vectorManager.query(query, uid)
+      const results = await vectorManager.queryWithStreaming(query, uid)
       io.emit('hello', results)
 
       //   console.log(results)

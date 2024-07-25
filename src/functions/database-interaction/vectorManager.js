@@ -1,15 +1,22 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import { Pinecone } from '@pinecone-database/pinecone'
-import { OpenAIEmbeddings, OpenAI } from '@langchain/openai'
+import { OpenAIEmbeddings, OpenAI, ChatOpenAI } from '@langchain/openai'
 import { PineconeStore } from '@langchain/pinecone'
 import * as dotenv from 'dotenv'
 // import { VectorDBQAChain } from 'langchain/chains'
 import { getIo } from '../../socket.js'
 import {
+  PromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate
 } from '@langchain/core/prompts'
+import {
+  RunnablePassthrough,
+  RunnableSequence
+  ,
+  RunnableMap
+} from '@langchain/core/runnables'
 // import {
 //   RunnablePassthrough,
 //   RunnableSequence
@@ -17,14 +24,14 @@ import {
 // // import type { Document } from '@langchain/core/documents'
 // import { StringOutputParser } from '@langchain/core/output_parsers'
 import { loadQAMapReduceChain } from 'langchain/chains'
-
-import { createRetrievalChain } from 'langchain/chains/retrieval'
+import { pull } from 'langchain/hub'
+import { formatDocumentsAsString } from 'langchain/util/document'
+import { StringOutputParser } from '@langchain/core/output_parsers'
+import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents'
+import { StreamingTextResponse, LangChainAdapter } from 'ai'
 
 dotenv.config()
 
-const formatDocumentsAsString = (documents) => {
-  return documents.map((document) => document.pageContent).join('\n\n')
-}
 export class VectorManager {
   #client
   #pineconeIndex
@@ -41,6 +48,7 @@ export class VectorManager {
     })
 
     this.#pineconeIndex = this.#client.Index(process.env.PINECONE_INDEX)
+    this.#initialized = true
   }
 
   async index (docs, uid) {
@@ -58,7 +66,6 @@ export class VectorManager {
 
   async query (query, uid) {
     await this.#initialized
-    console.log('from vectormanager: ' + uid)
 
     const dbConfig = {
       pineconeIndex: this.#pineconeIndex,
@@ -69,10 +76,6 @@ export class VectorManager {
       new OpenAIEmbeddings(),
       dbConfig
     )
-
-
-
-    console.log(vectorStore)
 
     const model = new OpenAI({
       maxTokens: -1,
@@ -85,47 +88,116 @@ export class VectorManager {
 
     const mapReduceChain = loadQAMapReduceChain(model)
 
-    const answer = await mapReduceChain.invoke({
+    const message = await mapReduceChain.stream({
       question: query,
       input_documents: relevantDocs
     })
 
-    console.log(answer)
-    return answer
+    // console.log(answer)
+    return message
   }
 
   async queryWithStreaming (query, uid) {
     this.socket = getIo()
     await this.#initialized
+
+    const dbConfig = {
+      pineconeIndex: this.#pineconeIndex,
+      namespace: `${uid}`
+    }
+
     const vectorStore = await PineconeStore.fromExistingIndex(
       new OpenAIEmbeddings(),
-      { pineconeIndex: this.#pineconeIndex, namespace: `${uid}` }
+      dbConfig
     )
 
-    const model = new OpenAI({
-      maxTokens: -1,
+    const retriever = vectorStore.asRetriever()
+    const documentRetrievalChain = RunnableSequence.from([
+      (input) => input.query,
+      retriever,
+      formatDocumentsAsString
+    ])
+
+    // const context = await documentRetrievalChain.invoke(query)
+
+    const input = {
+      query,
+      conversation_history: [],
+      // context
+    }
+
+    // Document retrieval chain
+
+    // Create LLM model
+    const llmModel = new ChatOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      model: 'gpt-3.5-turbo',
+      temperature: 0,
       streaming: true
     })
 
-    const chain = VectorDBQAChain.fromLLM(model, vectorStore, {
-      k: 1,
-      returnSourceDocuments: true
-    })
+    // const context1 = await documentRetrievalChain.invoke(input)
 
-    this.socket.emit('responseStart')
+    // Create chat prompt template
+    const chatPrompt = ChatPromptTemplate.fromMessages([
+      SystemMessagePromptTemplate.fromTemplate('Answer the user\'s question. If you cannot find the answer within the context, just say I don\'t know.'),
+      HumanMessagePromptTemplate.fromTemplate('{question}\nContext: {context}')
+    ])
 
-    const response = await chain.call({ query: `${query}` }, [
+    const standaloneQuestionChain = RunnableSequence.from([
+      RunnablePassthrough.assign({
+        context: (input) => input.context,
+        question: (input) => input.query
+      }),
+      chatPrompt,
+      new ChatOpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+        model: 'gpt-4o-mini',
+        temperature: 0,
+        verbose: true
+      }),
+      new StringOutputParser()
+    ])
+
+    // console.log('Context:', context1)
+
+    // Create the OpenAI tools
+    const retrievalChain = RunnableSequence.from([
+      RunnablePassthrough.assign({
+        question: standaloneQuestionChain,
+        original_message: (input) => input.query
+      }),
       {
-        handleLLMNewToken: (token) => {
-          this.socket.emit('newToken', { token, type: 'server' })
-          console.log({ token, type: 'server' })
+        context: documentRetrievalChain,
+        question: (input) => input.original_message
+      },
+      {
+        // Format the input for the llm model
+        transform: async (input) => {
+          // console.log('context1: ' + context1)
+
+          const formattedMessages = await chatPrompt.formatMessages({
+            question: input.query,
+            context
+          })
+          return formattedMessages
+        },
+        run: llmModel
+      },
+      {
+        content: (input) => {
+          return input.output
         }
       }
     ])
-    // this.socket.emit('responseComplete')
-    return response
 
-    // console.log(response)
+    // Execute retrieval chain
+    const stream = await retrievalChain.stream(input)
+
+    const aiStream = LangChainAdapter.toAIStream(stream)
+
+    // Respond with the stream
+    console.log(new StreamingTextResponse(aiStream))
   }
 
   async deleteNamespace (uid) {

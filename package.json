@@ -27,7 +27,6 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-promise": "^6.1.1",
     "langchain": "^0.2.10"
-
   },
   "eslintConfig": {
     "extends": [
@@ -41,6 +40,7 @@
     "@langchain/openai": "^0.2.1",
     "@langchain/pinecone": "^0.0.7",
     "@pinecone-database/pinecone": "^2.2.2",
+    "ai": "^3.2.33",
     "chromadb": "^1.8.1",
     "chromadb-default-embed": "^2.13.2",
     "cors": "^2.8.5",
