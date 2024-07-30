@@ -129,6 +129,7 @@ export class VectorManager {
   }
 
   async queryWithStreaming (query, uid) {
+    this.socket = getIo()
     const dbConfig = {
       pineconeIndex: this.#pineconeIndex,
       namespace: `${uid}`
@@ -187,12 +188,14 @@ export class VectorManager {
       question: query
     })
 
-    console.log('resStream:', resStream)
+    // console.log('resStream:', resStream)
 
     const chunks = []
     for await (const chunk of resStream) {
       chunks.push(chunk)
-      console.log(`${chunk.result}`)
+      this.socket.emit('newToken', { type: 'server', token: chunk.result })
+
+      // console.log(`${chunk.result}`)
     }
   }
 
