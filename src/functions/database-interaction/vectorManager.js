@@ -65,8 +65,6 @@ export class VectorManager {
   }
 
   async query (query, uid) {
-    await this.#initialized
-
     const dbConfig = {
       pineconeIndex: this.#pineconeIndex,
       namespace: `${uid}`
@@ -76,128 +74,126 @@ export class VectorManager {
       new OpenAIEmbeddings(),
       dbConfig
     )
-
-    const model = new OpenAI({
-      maxTokens: -1,
-      streaming: true
-    })
 
     const vectorStoreRetriever = vectorStore.asRetriever()
 
-    const relevantDocs = await vectorStoreRetriever.invoke(query)
-
-    const mapReduceChain = loadQAMapReduceChain(model)
-
-    const message = await mapReduceChain.stream({
-      question: query,
-      input_documents: relevantDocs
-    })
-
-    // console.log(answer)
-    return message
-  }
-
-  async queryWithStreaming (query, uid) {
-    this.socket = getIo()
-    await this.#initialized
-
-    const dbConfig = {
-      pineconeIndex: this.#pineconeIndex,
-      namespace: `${uid}`
-    }
-
-    const vectorStore = await PineconeStore.fromExistingIndex(
-      new OpenAIEmbeddings(),
-      dbConfig
-    )
-
-    const retriever = vectorStore.asRetriever()
-    const documentRetrievalChain = RunnableSequence.from([
-      (input) => input.query,
-      retriever,
-      formatDocumentsAsString
-    ])
-
-    // const context = await documentRetrievalChain.invoke(query)
-
-    const input = {
-      query,
-      conversation_history: [],
-      // context
-    }
-
-    // Document retrieval chain
-
-    // Create LLM model
-    const llmModel = new ChatOpenAI({
+    const model = new ChatOpenAI({
       apiKey: process.env.OPENAI_API_KEY,
       model: 'gpt-3.5-turbo',
       temperature: 0,
       streaming: true
     })
 
-    // const context1 = await documentRetrievalChain.invoke(input)
+    // Create a system & human prompt for the chat model
 
-    // Create chat prompt template
-    const chatPrompt = ChatPromptTemplate.fromMessages([
-      SystemMessagePromptTemplate.fromTemplate('Answer the user\'s question. If you cannot find the answer within the context, just say I don\'t know.'),
-      HumanMessagePromptTemplate.fromTemplate('{question}\nContext: {context}')
-    ])
+    // from the langchain docs
+    const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
+  If you don't know the answer, just say that you don't know, don't try to make up an answer.
+  ----------------
+  {context}`
+    const messages = [
+      SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
+      HumanMessagePromptTemplate.fromTemplate('{question}')
+    ]
+    const prompt = ChatPromptTemplate.fromMessages(messages)
 
-    const standaloneQuestionChain = RunnableSequence.from([
-      RunnablePassthrough.assign({
-        context: (input) => input.context,
-        question: (input) => input.query
-      }),
-      chatPrompt,
-      new ChatOpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
-        model: 'gpt-4o-mini',
-        temperature: 0,
-        verbose: true
-      }),
-      new StringOutputParser()
-    ])
-
-    // console.log('Context:', context1)
-
-    // Create the OpenAI tools
-    const retrievalChain = RunnableSequence.from([
-      RunnablePassthrough.assign({
-        question: standaloneQuestionChain,
-        original_message: (input) => input.query
-      }),
+    const chain = RunnableSequence.from([
       {
-        context: documentRetrievalChain,
-        question: (input) => input.original_message
+        // Extract the "question" field from the input object and pass it to the retriever as a string
+        sourceDocuments: RunnableSequence.from([
+          (input) => input.question,
+          vectorStoreRetriever
+        ]),
+        question: (input) => input.question
       },
       {
-        // Format the input for the llm model
-        transform: async (input) => {
-          // console.log('context1: ' + context1)
-
-          const formattedMessages = await chatPrompt.formatMessages({
-            question: input.query,
-            context
-          })
-          return formattedMessages
-        },
-        run: llmModel
+        // Pass the source documents through unchanged so that we can return them directly in the final result
+        sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
+        question: (previousStepResult) => previousStepResult.question,
+        context: (previousStepResult) =>
+          formatDocumentsAsString(previousStepResult.sourceDocuments)
       },
       {
-        content: (input) => {
-          return input.output
-        }
+        result: prompt.pipe(model).pipe(new StringOutputParser()),
+        sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments
       }
     ])
 
-    // Execute retrieval chain
-    const stream = await retrievalChain.stream(input)
+    const res = await chain.invoke({
+      question: query
+    })
 
-    const aiStream = LangChainAdapter.toAIStream(stream)
+    const returnMessage = (JSON.stringify(res, null, 2))
 
-    // Respond with the stream
-    console.log(new StreamingTextResponse(aiStream))
+    return returnMessage
+  }
+
+  async queryWithStreaming (query, uid) {
+    const dbConfig = {
+      pineconeIndex: this.#pineconeIndex,
+      namespace: `${uid}`
+    }
+
+    const vectorStore = await PineconeStore.fromExistingIndex(
+      new OpenAIEmbeddings(),
+      dbConfig
+    )
+
+    const vectorStoreRetriever = vectorStore.asRetriever()
+
+    const model = new ChatOpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+      model: 'gpt-3.5-turbo',
+      temperature: 0,
+      streaming: true
+    })
+
+    // Create a system & human prompt for the chat model
+
+    // from the langchain docs
+    const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
+  If you don't know the answer, just say that you don't know, don't try to make up an answer.
+  ----------------
+  {context}`
+    const messages = [
+      SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
+      HumanMessagePromptTemplate.fromTemplate('{question}')
+    ]
+    const prompt = ChatPromptTemplate.fromMessages(messages)
+
+    const chain = RunnableSequence.from([
+      {
+        // Extract the "question" field from the input object and pass it to the retriever as a string
+        sourceDocuments: RunnableSequence.from([
+          (input) => input.question,
+          vectorStoreRetriever
+        ]),
+        question: (input) => input.question
+      },
+      {
+        // Pass the source documents through unchanged so that we can return them directly in the final result
+        sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
+        question: (previousStepResult) => previousStepResult.question,
+        context: (previousStepResult) =>
+          formatDocumentsAsString(previousStepResult.sourceDocuments)
+      },
+      {
+        result: prompt.pipe(model).pipe(new StringOutputParser()),
+        sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments
+      }
+    ])
+
+    const resStream = await chain.stream({
+      question: query
+    })
+
+    console.log('resStream:', resStream)
+
+    const chunks = []
+    for await (const chunk of resStream) {
+      chunks.push(chunk)
+      console.log(`${chunk.result}`)
+    }
   }
 
   async deleteNamespace (uid) {
