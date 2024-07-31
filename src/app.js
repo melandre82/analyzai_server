@@ -71,11 +71,11 @@ try {
   // ])
   // console.log(response)
 
-  const vectorManager = new VectorManager()
+  // const vectorManager = new VectorManager()
 
-  const query = 'What is the history of Porsche?'
+  // const query = 'What is the history of Porsche?'
 
-  console.log(await vectorManager.queryWithStreaming(query))
+  // console.log(await vectorManager.queryWithStreaming(query))
 } catch (error) {
   console.log(error)
 }

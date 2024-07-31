@@ -121,7 +121,7 @@ export class FileController {
       })
 
       writeStream.on('finish', async () => {
-        console.log('File uploaded successfully.')
+        // console.log('File uploaded successfully.')
 
         const downloadURL = await firebaseFile.getSignedUrl({
           action: 'read',
@@ -141,7 +141,7 @@ export class FileController {
           .doc(file.originalname)
           .set(metadata)
 
-        console.log('downloadURL: ' + downloadURL)
+        // console.log('downloadURL: ' + downloadURL)
       })
 
       writeStream.end(file.buffer)
@@ -154,7 +154,7 @@ export class FileController {
 
       // const pdfText = await pdfloader.load(file.buffer)
 
-      console.log('pdf text ' + pdfText)
+      // console.log('pdf text ' + pdfText)
 
       const doc = await textSplitter.splitText(
         pdfText,

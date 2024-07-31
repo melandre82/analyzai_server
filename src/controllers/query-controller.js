@@ -15,14 +15,14 @@ export class QueryController {
 
       const uid = req.body.uid
 
+      const currentFileName = req.body.currentFileName
+
+
       const io = getIo()
 
 
-      // const results = await vectorManager.query(query)
-
-      console.log('uid: ' + uid)
-
-      const results = await vectorManager.queryWithStreaming(query, uid)
+  
+      const results = await vectorManager.queryWithStreaming(query, uid, currentFileName)
       io.emit('hello', results)
 
       //   console.log(results)

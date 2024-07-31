@@ -128,11 +128,12 @@ export class VectorManager {
     return returnMessage
   }
 
-  async queryWithStreaming (query, uid) {
+  async queryWithStreaming (query, uid, currentFileName) {
     this.socket = getIo()
     const dbConfig = {
       pineconeIndex: this.#pineconeIndex,
-      namespace: `${uid}`
+      namespace: `${uid}`,
+      filter: { filename: `${currentFileName}` }
     }
 
     const vectorStore = await PineconeStore.fromExistingIndex(
