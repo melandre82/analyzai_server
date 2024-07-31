@@ -1,6 +1,6 @@
 import express, { application } from 'express'
 import dotenv from 'dotenv'
-// import { connectDB } from './config/mongoose.js'
+import { connectDB } from './config/mongoose.js'
 import logger from 'morgan'
 import { router } from './routes/router.js'
 import cors from 'cors'
@@ -17,6 +17,8 @@ import { initSocket, getIo } from './socket.js'
 try {
   dotenv.config()
 
+  await connectDB()
+
   // Import required modules and packages
 
   dotenv.config()
@@ -29,14 +31,6 @@ try {
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
   }
-
-  // app.use((req, res, next) => {
-  //   res.header('Access-Control-Allow-Origin', process.env.CLIENT_URL)
-  //   res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, multipart/form-data')
-  //   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  //   res.header('Access-Control-Allow-Credentials', 'true')
-  //   next()
-  // })
 
   console.log('CORS is allowing: ', process.env.CLIENT_URL)
 

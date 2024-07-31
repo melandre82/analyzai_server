@@ -1,35 +1,21 @@
 /* eslint-disable jsdoc/require-jsdoc */
 import { Pinecone } from '@pinecone-database/pinecone'
-import { OpenAIEmbeddings, OpenAI, ChatOpenAI } from '@langchain/openai'
+import { OpenAIEmbeddings, ChatOpenAI } from '@langchain/openai'
 import { PineconeStore } from '@langchain/pinecone'
 import * as dotenv from 'dotenv'
-// import { VectorDBQAChain } from 'langchain/chains'
 import { getIo } from '../../socket.js'
 import {
-  PromptTemplate,
   ChatPromptTemplate,
   HumanMessagePromptTemplate,
   SystemMessagePromptTemplate
 } from '@langchain/core/prompts'
 import {
-  RunnablePassthrough,
   RunnableSequence
-  ,
-  RunnableMap
 } from '@langchain/core/runnables'
-// import {
-//   RunnablePassthrough,
-//   RunnableSequence
-// } from '@langchain/core/runnables'
-// // import type { Document } from '@langchain/core/documents'
-// import { StringOutputParser } from '@langchain/core/output_parsers'
-import { loadQAMapReduceChain } from 'langchain/chains'
-import { pull } from 'langchain/hub'
+
 import { formatDocumentsAsString } from 'langchain/util/document'
 import { StringOutputParser } from '@langchain/core/output_parsers'
-import { AgentExecutor, createOpenAIToolsAgent } from 'langchain/agents'
-import { StreamingTextResponse, LangChainAdapter } from 'ai'
-
+import saveAiChatMessage from '../mongodb/saveAiChatMessage.js'
 dotenv.config()
 
 export class VectorManager {
@@ -195,9 +181,31 @@ export class VectorManager {
     for await (const chunk of resStream) {
       chunks.push(chunk)
       this.socket.emit('newToken', { type: 'server', token: chunk.result })
-
-      // console.log(`${chunk.result}`)
     }
+
+    const message = chunks.map((chunk) => chunk.result).join('')
+
+    const sourceDocuments = []
+
+    for (const chunk of chunks) {
+      if (chunk.sourceDocuments) {
+        sourceDocuments.push(...chunk.sourceDocuments)
+      }
+    }
+
+    // console.log(uid)
+    // console.log(currentFileName)
+    // console.log(aiMessage)
+    // console.log(sourceDocuments)
+
+    await saveAiChatMessage(
+      uid,
+      currentFileName,
+      message,
+      sourceDocuments
+    )
+
+    // console.log('aimessage: ' + aiMessage)
   }
 
   async deleteNamespace (uid) {

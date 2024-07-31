@@ -1,8 +1,8 @@
 /* eslint-disable jsdoc/require-jsdoc */
 
 import { VectorManager } from '../functions/database-interaction/vectorManager.js'
-// import { Socket } from '../socket.js'
 import { getIo } from '../socket.js'
+import saveUserChatMessage from '../functions/mongodb/saveUserChatMessage.js'
 
 const vectorManager = new VectorManager()
 
@@ -17,15 +17,14 @@ export class QueryController {
 
       const currentFileName = req.body.currentFileName
 
+      await saveUserChatMessage(uid, currentFileName, query)
 
       const io = getIo()
 
-
-  
       const results = await vectorManager.queryWithStreaming(query, uid, currentFileName)
       io.emit('hello', results)
 
-      //   console.log(results)
+
 
       console.log(JSON.stringify(results, null, 2))
 
