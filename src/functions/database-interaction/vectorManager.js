@@ -182,7 +182,7 @@ export class VectorManager {
     const chunks = []
     for await (const chunk of resStream) {
       chunks.push(chunk)
-      this.socket.emit('newToken', { type: 'server', token: chunk.result })
+      this.socket.emit('newToken', { type: 'server', token: chunk.result, currentFileName })
     }
 
     const message = chunks.map((chunk) => chunk.result).join('')
