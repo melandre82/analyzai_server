@@ -48,7 +48,7 @@ try {
 
   app.use((req, res, next) => {
     const fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl
-    console.log(`Received ${req.method} request at ${fullUrl}`)
+    // console.log(`Received ${req.method} request at ${fullUrl}`)
     next()
   })
 

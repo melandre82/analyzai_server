@@ -116,6 +116,8 @@ export class VectorManager {
 
   async queryWithStreaming (query, uid, currentFileName) {
     this.socket = getIo()
+
+    console.log('current file name: ' + currentFileName)
     const dbConfig = {
       pineconeIndex: this.#pineconeIndex,
       namespace: `${uid}`,

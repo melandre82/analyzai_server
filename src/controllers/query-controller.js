@@ -26,7 +26,7 @@ export class QueryController {
 
 
 
-      console.log(JSON.stringify(results, null, 2))
+      // console.log(JSON.stringify(results, null, 2))
 
       res.status(200).json(results)
     } catch (error) {

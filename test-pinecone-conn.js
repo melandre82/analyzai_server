@@ -15,7 +15,7 @@ async function testUpsert () {
 
     const description = await pc.describeIndex('testing')
 
-    console.log(description)
+    // console.log(description)
 
     // await index.namespace('example-namespace').upsert([
     //   {
