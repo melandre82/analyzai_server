@@ -211,11 +211,15 @@ export class VectorManager {
   }
 
   async deleteNamespace (uid) {
-    await this.#initialized
+    try {
+      // console.log('deleting namespace: ' + uid)
+      await this.#initialized
 
-    await this.#pineconeIndex.delete1({
-      deleteAll: true,
-      namespace: `${uid}`
-    })
+      const index = this.#client.index(process.env.PINECONE_INDEX)
+
+      await index.namespace(`${uid}`).deleteAll()
+    } catch (error) {
+      throw new Error(error)
+    }
   }
 }

@@ -85,4 +85,60 @@ export class FileController {
         .json({ success: false, message: 'File upload failed', error })
     }
   }
+
+  async deleteUserFiles (req, res) {
+    try {
+      const uid = req.body.uid
+
+      try {
+        const user = await admin.auth().getUser(uid)
+        if (!user) {
+          throw new Error('User does not exist')
+        }
+        console.log(`User ${uid} exists.`)
+      } catch (error) {
+        console.error(`Error fetching user ${uid}:`, error.message)
+        throw new Error('User does not exist')
+      }
+
+      const firestore = admin.firestore()
+      const userCollectionRef = firestore.collection(`users/${uid}/files`)
+      const batchSize = 500
+
+      const deleteQueryBatch = async (querySnapshot) => {
+        const batch = firestore.batch()
+        querySnapshot.forEach((doc) => {
+          batch.delete(doc.ref)
+          console.log(`Deleting document: ${doc.ref.path}`)
+        })
+        await batch.commit()
+        console.log(`Batch of ${querySnapshot.size} documents deleted.`)
+      }
+
+      const deleteCollection = async (collectionRef) => {
+        let querySnapshot = await collectionRef.limit(batchSize).get()
+        while (!querySnapshot.empty) {
+          await deleteQueryBatch(querySnapshot)
+          querySnapshot = await collectionRef.limit(batchSize).get()
+        }
+      }
+
+      console.log(`Starting deletion process for user ${uid}...`)
+      await deleteCollection(userCollectionRef)
+
+      const deleteNestedCollections = async (collectionRef) => {
+        const querySnapshot = await collectionRef.get()
+        for (const doc of querySnapshot.docs) {
+          const subcollections = await doc.ref.listCollections()
+          for (const subcollection of subcollections) {
+            await deleteCollection(subcollection)
+          }
+        }
+      }
+
+      await deleteNestedCollections(userCollectionRef)
+    } catch (error) {
+      console.error('Error deleting user files:', error.message)
+    }
+  }
 }
