@@ -1,6 +1,4 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import express from 'express'
-// import { upload } from '../middleware/multer.js'
 import { FileController } from '../controllers/file-controller.js'
 import { QueryController } from '../controllers/query-controller.js'
 import { ChatHistoryController } from '../controllers/chat-history-controller.js'

@@ -1,10 +1,11 @@
 import { ChatMessage } from '../../../models/chat-message.js'
 
 /**
- * Load chat messages from the database
+ * Load chat messages from the database.
  *
- * @param uid - user id
- * @param documentId - document id
+ * @param {string} uid - user id
+ * @param {string} documentId - document id
+ * @returns {Promise<ChatMessage[]>} - the chat messages
  */
 async function loadChatMessages (uid, documentId) {
   try {

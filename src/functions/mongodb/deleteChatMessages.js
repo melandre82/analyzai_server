@@ -1,9 +1,9 @@
 import { ChatMessage } from '../../../models/chat-message.js'
 
-// Delete all chat messages with the given user id
 /**
+ * Delete all chat messages with the given user id.
  *
- * @param uid
+ * @param {string} uid - the user id
  */
 async function deleteChatMessages (uid) {
   try {

@@ -1,14 +1,19 @@
-/* eslint-disable jsdoc/require-jsdoc */
-
 import { VectorManager } from '../functions/database-interaction/vectorManager.js'
 import { getIo } from '../socket.js'
 import saveUserChatMessage from '../functions/mongodb/saveUserChatMessage.js'
 
 const vectorManager = new VectorManager()
 
-// const socket = new Socket()
-
+/**
+ *
+ */
 export class QueryController {
+  /**
+   * Queries the database.
+   *
+   * @param {object} req the request object
+   * @param {object} res the response object
+   */
   async query (req, res) {
     try {
       const query = req.body.query
@@ -23,10 +28,6 @@ export class QueryController {
 
       const results = await vectorManager.queryWithStreaming(query, uid, currentFileName)
       io.emit('hello', results)
-
-
-
-      // console.log(JSON.stringify(results, null, 2))
 
       res.status(200).json(results)
     } catch (error) {

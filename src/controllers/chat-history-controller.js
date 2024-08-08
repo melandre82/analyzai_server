@@ -5,9 +5,10 @@ import loadChatMessages from '../functions/mongodb/loadChatMessages.js'
  */
 export class ChatHistoryController {
   /**
+   * Gets chat history.
    *
-   * @param req
-   * @param res
+   * @param {object} req the request object
+   * @param {object} res the response object
    */
   async getChatHistory (req, res) {
     try {
@@ -15,8 +16,6 @@ export class ChatHistoryController {
       const documentId = req.body.documentId
 
       console.log(req.body)
-    //   console.log('uid', uid)
-    //   console.log('documentId', documentId)
 
       const chatMessages = await loadChatMessages(uid, documentId)
 

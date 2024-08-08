@@ -1,8 +1,12 @@
-/* eslint-disable jsdoc/require-jsdoc */
-
 import { PDFExtract } from 'pdf.js-extract'
 
-export async function parsePdf(buffer) {
+/**
+ * Parses a PDF buffer.
+ *
+ * @param {any} buffer - The file buffer
+ * @returns {Promise<string>} - The text content of the PDF
+ */
+export async function parsePdf (buffer) {
   const pdfExtract = new PDFExtract()
   const options = {}
 
@@ -18,4 +22,3 @@ export async function parsePdf(buffer) {
     })
   })
 }
-

@@ -1,9 +1,6 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import { TextSplitter } from '../functions/text-manipulation/textsplitter.js'
 import { VectorManager } from '../functions/database-interaction/vectorManager.js'
 import { parsePdf } from '../functions/dataloaders/parsePdf.js'
-// import { PdfLoader } from '../functions/dataloaders/pdfloader.js'
-
 import bucket from '../config/firebaseAdmin.cjs'
 import admin from 'firebase-admin'
 
@@ -11,10 +8,20 @@ const textSplitter = new TextSplitter()
 
 const vectorManager = new VectorManager()
 
+/**
+ * The FileController class.
+ *
+ */
 export class FileController {
+  /**
+   * Receive a file and save it to Firebase Storage.
+   *
+   * @param {object} req The request object
+   * @param {object} res The response object
+   * @param {object} next The next object
+   */
   async receiveFile (req, res, next) {
     try {
-      // console.log('body: ' + JSON.stringify(req.body))
       const dateTime = Date.now()
       const file = req.file
       const uid = req.body.uid
@@ -40,8 +47,6 @@ export class FileController {
       })
 
       writeStream.on('finish', async () => {
-        // console.log('File uploaded successfully.')
-
         const downloadURL = await firebaseFile.getSignedUrl({
           action: 'read',
           expires: '03-01-2199'
@@ -59,8 +64,6 @@ export class FileController {
           .collection('files')
           .doc(file.originalname)
           .set(metadata)
-
-        // console.log('downloadURL: ' + downloadURL)
       })
 
       writeStream.end(file.buffer)
@@ -76,8 +79,6 @@ export class FileController {
       await vectorManager.index(doc, uid)
 
       res.status(200).json('File uploaded successfully.')
-
-      // console.log(doc)
     } catch (error) {
       console.error('File upload failed:', error)
       res
@@ -86,6 +87,12 @@ export class FileController {
     }
   }
 
+  /**
+   * Deletes all files associated with a user.
+   *
+   * @param {object} req The request object
+   * @param {object} res The response object
+   */
   async deleteUserFiles (req, res) {
     try {
       const uid = req.body.uid
@@ -105,16 +112,24 @@ export class FileController {
       const userCollectionRef = firestore.collection(`users/${uid}/files`)
       const batchSize = 500
 
+      /**
+       * Deletes a batch of documents from Firestore.
+       *
+       * @param {object} querySnapshot The query snapshot
+       */
       const deleteQueryBatch = async (querySnapshot) => {
         const batch = firestore.batch()
         querySnapshot.forEach((doc) => {
           batch.delete(doc.ref)
-          console.log(`Deleting document: ${doc.ref.path}`)
         })
         await batch.commit()
-        console.log(`Batch of ${querySnapshot.size} documents deleted.`)
       }
 
+      /**
+       * Deletes a collection from Firestore.
+       *
+       * @param {object} collectionRef The collection reference
+       */
       const deleteCollection = async (collectionRef) => {
         let querySnapshot = await collectionRef.limit(batchSize).get()
         while (!querySnapshot.empty) {
@@ -123,9 +138,13 @@ export class FileController {
         }
       }
 
-      console.log(`Starting deletion process for user ${uid}...`)
       await deleteCollection(userCollectionRef)
 
+      /**
+       * Deletes all nested collections from Firestore.
+       *
+       * @param {object} collectionRef The collection reference
+       */
       const deleteNestedCollections = async (collectionRef) => {
         const querySnapshot = await collectionRef.get()
         for (const doc of querySnapshot.docs) {
@@ -138,7 +157,7 @@ export class FileController {
 
       await deleteNestedCollections(userCollectionRef)
     } catch (error) {
-      console.error('Error deleting user files:', error.message)
+      res.status(500).send('Internal server error')
     }
   }
 }

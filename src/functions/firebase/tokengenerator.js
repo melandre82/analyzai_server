@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import admin from 'firebase-admin'
 import dotenv from 'dotenv'
 import { getAuth, signInWithCustomToken } from 'firebase/auth'
@@ -11,13 +10,23 @@ await initializeApp(firebaseConfig)
 
 dotenv.config()
 
-export async function generateCustomToken() {
+/**
+ * Generates a custom token.
+ *
+ * @returns {Promise<string>} The custom token.
+ */
+export async function generateCustomToken () {
   const serverId = process.env.FIREBASE_SERVER_UID
   const customToken = await admin.auth().createCustomToken(serverId)
   return customToken
 }
 
-export async function authorizeWithCustomToken(customToken) {
+/**
+ * Authorizes with a custom token.
+ *
+ * @param {string} customToken The custom token.
+ */
+export async function authorizeWithCustomToken (customToken) {
   const auth = getAuth()
   await signInWithCustomToken(auth, customToken)
 }

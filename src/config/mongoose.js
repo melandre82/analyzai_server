@@ -28,9 +28,6 @@ export const connectDB = async () => {
 
   mongoose.set('strictQuery', true)
 
-  // console.log('connection string is: ', process.env.MONGODB_CONNECTION_STRING)
-
-  // const DB_CONNECTION_STRING = process.env.DB_CONNECTION_STRING
   // Connect to the server.
   return mongoose.connect(process.env.MONGODB_CONNECTION_STRING)
 }

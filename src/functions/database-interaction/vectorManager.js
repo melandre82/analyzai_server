@@ -1,4 +1,3 @@
-/* eslint-disable jsdoc/require-jsdoc */
 import { Pinecone } from '@pinecone-database/pinecone'
 import { OpenAIEmbeddings, ChatOpenAI } from '@langchain/openai'
 import { PineconeStore } from '@langchain/pinecone'
@@ -18,16 +17,28 @@ import { StringOutputParser } from '@langchain/core/output_parsers'
 import saveAiChatMessage from '../mongodb/saveAiChatMessage.js'
 dotenv.config()
 
+/**
+ * VectorManager class.
+ *
+ */
 export class VectorManager {
   #client
   #pineconeIndex
   #initialized
   socket
 
+  /**
+   * Constructor for the VectorManager class.
+   *
+   */
   constructor () {
     this.#initialized = this.#init()
   }
 
+  /**
+   * Initialize the Pinecone client.
+   *
+   */
   async #init () {
     this.#client = new Pinecone({
       apiKey: process.env.PINECONE_API_KEY
@@ -37,6 +48,12 @@ export class VectorManager {
     this.#initialized = true
   }
 
+  /**
+   * Indexes the documents.
+   *
+   * @param {Array} docs - the documents
+   * @param {string} uid - the user id
+   */
   async index (docs, uid) {
     await this.#initialized
 
@@ -50,6 +67,13 @@ export class VectorManager {
     }
   }
 
+  /**
+   * Queries the Pinecone index. Code from the langchain docs.
+   *
+   * @param {string} query - The user query
+   * @param {string} uid - The user id
+   * @returns {Promise<string>} - The response
+   */
   async query (query, uid) {
     const dbConfig = {
       pineconeIndex: this.#pineconeIndex,
@@ -72,7 +96,6 @@ export class VectorManager {
 
     // Create a system & human prompt for the chat model
 
-    // from the langchain docs
     const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
   If you don't know the answer, just say that you don't know, don't try to make up an answer.
   ----------------
@@ -90,17 +113,26 @@ export class VectorManager {
           (input) => input.question,
           vectorStoreRetriever
         ]),
+        /**
+         * Extract the question and pass it to the retriever.
+         *
+         * @param {object} input - The input object
+         * @returns {string} - The question
+         */
         question: (input) => input.question
       },
       {
-        // Pass the source documents through unchanged so that we can return them directly in the final result
+        // eslint-disable-next-line
         sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
+        // eslint-disable-next-line
         question: (previousStepResult) => previousStepResult.question,
+        // eslint-disable-next-line
         context: (previousStepResult) =>
           formatDocumentsAsString(previousStepResult.sourceDocuments)
       },
       {
         result: prompt.pipe(model).pipe(new StringOutputParser()),
+        // eslint-disable-next-line
         sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments
       }
     ])
@@ -114,6 +146,13 @@ export class VectorManager {
     return returnMessage
   }
 
+  /**
+   * Queries the Pinecone index with streaming. Code from the langchain docs.
+   *
+   * @param {string} query - The user query
+   * @param {string} uid - The user id
+   * @param {string} currentFileName - The current file name
+   */
   async queryWithStreaming (query, uid, currentFileName) {
     this.socket = getIo()
 
@@ -142,9 +181,9 @@ export class VectorManager {
 
     // from the langchain docs
     const SYSTEM_TEMPLATE = `Use the following pieces of context to answer the question at the end.
-  If you don't know the answer, just say that you don't know, don't try to make up an answer.
-  ----------------
-  {context}`
+    If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    ----------------
+    {context}`
     const messages = [
       SystemMessagePromptTemplate.fromTemplate(SYSTEM_TEMPLATE),
       HumanMessagePromptTemplate.fromTemplate('{question}')
@@ -158,17 +197,22 @@ export class VectorManager {
           (input) => input.question,
           vectorStoreRetriever
         ]),
+        // eslint-disable-next-line
         question: (input) => input.question
       },
       {
         // Pass the source documents through unchanged so that we can return them directly in the final result
+        // eslint-disable-next-line
         sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments,
+        // eslint-disable-next-line
         question: (previousStepResult) => previousStepResult.question,
+        // eslint-disable-next-line
         context: (previousStepResult) =>
           formatDocumentsAsString(previousStepResult.sourceDocuments)
       },
       {
         result: prompt.pipe(model).pipe(new StringOutputParser()),
+        // eslint-disable-next-line
         sourceDocuments: (previousStepResult) => previousStepResult.sourceDocuments
       }
     ])
@@ -177,9 +221,9 @@ export class VectorManager {
       question: query
     })
 
-    // console.log('resStream:', resStream)
-
     const chunks = []
+
+    // Send each chunk to the client
     for await (const chunk of resStream) {
       chunks.push(chunk)
       this.socket.emit('newToken', { type: 'server', token: chunk.result, currentFileName })
@@ -195,24 +239,21 @@ export class VectorManager {
       }
     }
 
-    // console.log(uid)
-    // console.log(currentFileName)
-    // console.log(aiMessage)
-    // console.log(sourceDocuments)
-
     await saveAiChatMessage(
       uid,
       currentFileName,
       message,
       sourceDocuments
     )
-
-    // console.log('aimessage: ' + aiMessage)
   }
 
+  /**
+   * Deletes a namespace.
+   *
+   * @param {string} uid - the user id
+   */
   async deleteNamespace (uid) {
     try {
-      // console.log('deleting namespace: ' + uid)
       await this.#initialized
 
       const index = this.#client.index(process.env.PINECONE_INDEX)
