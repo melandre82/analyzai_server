@@ -172,7 +172,7 @@ export class VectorManager {
 
     const model = new ChatOpenAI({
       apiKey: process.env.OPENAI_API_KEY,
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-4o',
       temperature: 0,
       streaming: true
     })
@@ -245,6 +245,8 @@ export class VectorManager {
       message,
       sourceDocuments
     )
+
+    // console.log('sources: ' + JSON.stringify(sourceDocuments))
   }
 
   /**

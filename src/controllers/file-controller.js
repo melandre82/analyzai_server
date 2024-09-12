@@ -56,7 +56,8 @@ export class FileController {
         const metadata = {
           fileName: file.originalname,
           downloadURL: downloadURL[0],
-          uid
+          uid,
+          creationDate: dateTime
         }
         await firestore
           .collection('users')

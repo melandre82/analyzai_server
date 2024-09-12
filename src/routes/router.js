@@ -17,6 +17,10 @@ const userController = new UserController()
 
 const upload = multer({ storage: multer.memoryStorage() })
 
+router.get('/', (req, res) => {
+  res.send('Hello World!')
+})
+
 router.post('/query', (req, res) => {
   queryController.query(req, res)
 })
